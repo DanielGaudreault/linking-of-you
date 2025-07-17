@@ -1,11 +1,7 @@
-// Initialize PeerJS with stable configuration
-const peer = new Peer({
-    host: 'peerjs.com',
-    secure: true,
-    port: 443
-});
+// Initialize PeerJS
+const peer = new Peer();
 let conn = null;
-const sound = new Howl({ src: ['https://freesound.org/data/previews/171/171104_3042494-lq.mp3'] });
+const sound = new Howl({ src: ['https://freesound.org/data/previews/171/171104_3042494-lq.mp3'] }); // Gentle chime
 let messageQueue = [];
 let currentMessage = null;
 
@@ -15,12 +11,11 @@ if (recentPeerId) {
     document.getElementById('peer-id').value = recentPeerId;
 }
 
-// Display peer ID and shareable link
+// Display peer ID
 peer.on('open', (id) => {
     document.getElementById('my-id').textContent = id;
-    const baseUrl = window.location.origin + window.location.pathname;
-    const shareUrl = `${baseUrl}?peer=${encodeURIComponent(id)}`;
-    document.getElementById('share-link').value = shareUrl;
+    const shareUrl = `${window.location.href.split('?')[0]}?peer=${id}`;
+    window.history.replaceState(null, '', shareUrl);
 });
 
 // Handle incoming connections
@@ -37,19 +32,16 @@ function connectToPeer() {
         return;
     }
     localStorage.setItem('recentPeerId', peerId);
-    document.getElementById('status').textContent = 'Connecting...';
     conn = peer.connect(peerId);
     setupConnection();
 }
 
 // Copy share link
 function copyShareLink() {
-    const shareLink = document.getElementById('share-link');
-    shareLink.select();
-    navigator.clipboard.writeText(shareLink.value).then(() => {
+    const peerId = document.getElementById('my-id').textContent;
+    const shareUrl = `${window.location.href.split('?')[0]}?peer=${peerId}`;
+    navigator.clipboard.writeText(shareUrl).then(() => {
         alert('Share link copied!');
-    }).catch(() => {
-        alert('Failed to copy. Please copy manually.');
     });
 }
 
@@ -59,30 +51,16 @@ function setupConnection() {
     document.getElementById('app-section').style.display = 'block';
     document.getElementById('status').textContent = 'Connected!';
 
+    // Receive messages
     conn.on('data', (data) => {
-        if (data === 'Message viewed!') {
-            document.getElementById('message').textContent = data;
-            animateHearts();
-            setTimeout(() => {
-                if (!currentMessage) {
-                    document.getElementById('message').textContent = '';
-                }
-            }, 3000);
-        } else {
-            messageQueue.push(data);
-            updateBadge();
-            if (!currentMessage) {
-                showNextMessage();
-            }
+        messageQueue.push(data);
+        updateBadge();
+        if (!currentMessage) {
+            showNextMessage();
         }
     });
 
-    conn.on('error', (err) => {
-        console.error('Connection error:', err);
-        document.getElementById('status').textContent = 'Connection error';
-        alert('Connection error. Please try again.');
-    });
-
+    // Handle disconnection
     conn.on('close', () => {
         document.getElementById('status').textContent = 'Disconnected';
         document.getElementById('app-section').style.display = 'none';
@@ -104,10 +82,6 @@ function sendThought() {
     const messageType = document.getElementById('message-type').value;
     const customMessage = document.getElementById('custom-message').value.trim();
     const message = messageType === 'Custom' && customMessage ? customMessage : messageType;
-    if (message.length > 50) {
-        alert('Message too long! Max 50 characters.');
-        return;
-    }
     conn.send(message);
     document.getElementById('message').textContent = 'Thought sent!';
     animateHearts();
@@ -120,9 +94,6 @@ function sendThought() {
 
 // Acknowledge message
 function acknowledgeMessage() {
-    if (conn && conn.open) {
-        conn.send('Message viewed!');
-    }
     messageQueue.shift();
     currentMessage = null;
     updateBadge();
@@ -180,7 +151,7 @@ document.getElementById('message-type').addEventListener('change', (e) => {
 
 // Check online status
 window.addEventListener('offline', () => {
-    document.getElementById('status').textContent = 'Offline - Please reconnect';
+    document.getElementById('status').textContent = 'Offline - Please reconnect when back online';
     document.getElementById('app-section').style.display = 'none';
     document.getElementById('connect-section').style.display = 'block';
     messageQueue = [];
@@ -194,16 +165,12 @@ window.onload = () => {
     const peerId = urlParams.get('peer');
     if (peerId) {
         document.getElementById('peer-id').value = peerId;
-        document.getElementById('status').textContent = 'Connecting...';
-        setTimeout(connectToPeer, 500); // Delay to ensure PeerJS is ready
+        connectToPeer();
     }
 };
 
 // Handle peer errors
 peer.on('error', (err) => {
     console.error('PeerJS error:', err);
-    document.getElementById('status').textContent = 'Connection error';
     alert('Connection error: ' + err.type);
-    document.getElementById('app-section').style.display = 'none';
-    document.getElementById('connect-section').style.display = 'block';
 });
