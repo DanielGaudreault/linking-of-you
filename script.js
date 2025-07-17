@@ -15,12 +15,9 @@ if (recentPeerId) {
     document.getElementById('peer-id').value = recentPeerId;
 }
 
-// Display peer ID and shareable link
+// Display peer ID
 peer.on('open', (id) => {
     document.getElementById('my-id').textContent = id;
-    const baseUrl = window.location.origin + window.location.pathname;
-    const shareUrl = `${baseUrl}?peer=${encodeURIComponent(id)}`;
-    document.getElementById('share-link').value = shareUrl;
 });
 
 // Handle incoming connections
@@ -39,22 +36,15 @@ function connectToPeer() {
     localStorage.setItem('recentPeerId', peerId);
     document.getElementById('status').textContent = 'Connecting...';
     conn = peer.connect(peerId);
-    setupConnection();
-}
-
-// Copy share link
-function copyShareLink() {
-    const shareLink = document.getElementById('share-link');
-    shareLink.select();
-    navigator.clipboard.writeText(shareLink.value).then(() => {
-        alert('Share link copied!');
-    }).catch(() => {
-        alert('Failed to copy. Please copy manually.');
-    });
+    setTimeout(setupConnection, 1000); // Delay to ensure connection stability
 }
 
 // Setup connection
 function setupConnection() {
+    if (!conn || !conn.open) {
+        document.getElementById('status').textContent = 'Connection failed';
+        return;
+    }
     document.getElementById('connect-section').style.display = 'none';
     document.getElementById('app-section').style.display = 'block';
     document.getElementById('status').textContent = 'Connected!';
@@ -81,6 +71,8 @@ function setupConnection() {
         console.error('Connection error:', err);
         document.getElementById('status').textContent = 'Connection error';
         alert('Connection error. Please try again.');
+        document.getElementById('app-section').style.display = 'none';
+        document.getElementById('connect-section').style.display = 'block';
     });
 
     conn.on('close', () => {
@@ -163,17 +155,6 @@ window.addEventListener('offline', () => {
     document.getElementById('message').textContent = '';
     document.getElementById('acknowledge-btn').style.display = 'none';
 });
-
-// Auto-connect if peer ID is in URL
-window.onload = () => {
-    const urlParams = new URLSearchParams(window.location.search);
-    const peerId = urlParams.get('peer');
-    if (peerId) {
-        document.getElementById('peer-id').value = peerId;
-        document.getElementById('status').textContent = 'Connecting...';
-        setTimeout(connectToPeer, 1000); // Delay for PeerJS initialization
-    }
-};
 
 // Handle peer errors
 peer.on('error', (err) => {
