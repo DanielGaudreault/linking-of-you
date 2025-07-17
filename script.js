@@ -1,11 +1,11 @@
-// Initialize PeerJS with explicit signaling server for reliability
+// Initialize PeerJS with stable configuration
 const peer = new Peer({
     host: 'peerjs.com',
     secure: true,
     port: 443
 });
 let conn = null;
-const sound = new Howl({ src: ['https://freesound.org/data/previews/171/171104_3042494-lq.mp3'] }); // Gentle chime
+const sound = new Howl({ src: ['https://freesound.org/data/previews/171/171104_3042494-lq.mp3'] });
 let messageQueue = [];
 let currentMessage = null;
 
@@ -49,7 +49,7 @@ function copyShareLink() {
     navigator.clipboard.writeText(shareLink.value).then(() => {
         alert('Share link copied!');
     }).catch(() => {
-        alert('Failed to copy link. Please copy it manually.');
+        alert('Failed to copy. Please copy manually.');
     });
 }
 
@@ -59,7 +59,6 @@ function setupConnection() {
     document.getElementById('app-section').style.display = 'block';
     document.getElementById('status').textContent = 'Connected!';
 
-    // Receive messages
     conn.on('data', (data) => {
         if (data === 'Message viewed!') {
             document.getElementById('message').textContent = data;
@@ -78,14 +77,12 @@ function setupConnection() {
         }
     });
 
-    // Handle connection errors
     conn.on('error', (err) => {
         console.error('Connection error:', err);
         document.getElementById('status').textContent = 'Connection error';
         alert('Connection error. Please try again.');
     });
 
-    // Handle disconnection
     conn.on('close', () => {
         document.getElementById('status').textContent = 'Disconnected';
         document.getElementById('app-section').style.display = 'none';
@@ -183,7 +180,7 @@ document.getElementById('message-type').addEventListener('change', (e) => {
 
 // Check online status
 window.addEventListener('offline', () => {
-    document.getElementById('status').textContent = 'Offline - Please reconnect when back online';
+    document.getElementById('status').textContent = 'Offline - Please reconnect';
     document.getElementById('app-section').style.display = 'none';
     document.getElementById('connect-section').style.display = 'block';
     messageQueue = [];
@@ -198,7 +195,7 @@ window.onload = () => {
     if (peerId) {
         document.getElementById('peer-id').value = peerId;
         document.getElementById('status').textContent = 'Connecting...';
-        connectToPeer();
+        setTimeout(connectToPeer, 500); // Delay to ensure PeerJS is ready
     }
 };
 
