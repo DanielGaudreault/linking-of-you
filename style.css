@@ -5,73 +5,99 @@ body {
     align-items: center;
     min-height: 100vh;
     margin: 0;
-    background: linear-gradient(135deg, #f5e1ee, #d4e4ff);
+    background: linear-gradient(135deg, #ffe1f0, #e1d4ff);
     overflow: auto;
 }
 
 .container {
     text-align: center;
-    padding: 20px;
-    background-color: rgba(255, 255, 255, 0.95);
-    border-radius: 15px;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+    padding: 24px;
+    background-color: rgba(255, 255, 255, 0.97);
+    border-radius: 20px;
+    box-shadow: 0 6px 24px rgba(0, 0, 0, 0.15);
     max-width: 90%;
-    width: 400px;
+    width: 420px;
 }
 
 h1 {
-    font-size: 28px;
-    color: #e91e63;
+    font-size: 30px;
+    color: #d81b60;
     margin-bottom: 20px;
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.1);
 }
 
 input, select {
-    padding: 10px;
-    margin: 10px 0;
+    padding: 12px;
+    margin: 12px 0;
     font-size: 16px;
-    width: 80%;
-    max-width: 300px;
-    border: 1px solid #ccc;
-    border-radius: 5px;
+    width: 85%;
+    max-width: 320px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
     box-sizing: border-box;
+    transition: border-color 0.3s;
+}
+
+input:focus, select:focus {
+    border-color: #d81b60;
+    outline: none;
 }
 
 button {
-    padding: 12px 24px;
+    padding: 14px 28px;
     font-size: 16px;
-    background-color: #e91e63;
+    background-color: #d81b60;
     color: white;
     border: none;
-    border-radius: 5px;
+    border-radius: 8px;
     cursor: pointer;
     transition: background-color 0.3s, transform 0.2s;
 }
 
 button:hover {
-    background-color: #c2185b;
+    background-color: #b01550;
     transform: scale(1.05);
 }
 
+#connect-btn {
+    position: relative;
+}
+
+.spinner {
+    display: inline-block;
+    width: 16px;
+    height: 16px;
+    border: 2px solid #fff;
+    border-top: 2px solid transparent;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin-left: 8px;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
 #acknowledge-btn {
-    background-color: #007bff;
-    margin-top: 10px;
+    background-color: #0288d1;
+    margin-top: 12px;
 }
 
 #acknowledge-btn:hover {
-    background-color: #0056b3;
+    background-color: #026aa7;
 }
 
 p {
     font-size: 18px;
     color: #333;
-    margin: 10px 0;
+    margin: 12px 0;
 }
 
 #message {
-    font-size: 20px;
-    color: #e91e63;
+    font-size: 22px;
+    color: #d81b60;
     font-weight: bold;
-    min-height: 24px;
+    min-height: 26px;
     cursor: pointer;
     transition: opacity 0.3s;
 }
@@ -86,19 +112,19 @@ p {
 
 #my-id {
     font-weight: bold;
-    color: #007bff;
+    color: #0288d1;
 }
 
 #animation-container {
     position: relative;
-    height: 100px;
+    height: 120px;
 }
 
 .heart {
     position: absolute;
     width: 20px;
     height: 20px;
-    background-color: #e91e63;
+    background-color: #d81b60;
     transform: rotate(-45deg);
     opacity: 0;
 }
@@ -109,7 +135,7 @@ p {
     position: absolute;
     width: 20px;
     height: 20px;
-    background-color: #e91e63;
+    background-color: inherit;
     border-radius: 50%;
 }
 
@@ -125,10 +151,14 @@ p {
 
 @media (max-width: 500px) {
     h1 {
-        font-size: 24px;
+        font-size: 26px;
     }
     input, select, button {
-        font-size: 14px;
-        padding: 8px;
+        font-size: 15px;
+        padding: 10px;
+    }
+    .container {
+        padding: 16px;
+        width: 90%;
     }
 }
