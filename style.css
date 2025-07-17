@@ -48,11 +48,6 @@ input, select {
     box-sizing: border-box;
 }
 
-input[readonly] {
-    background-color: #f0f0f0;
-    cursor: pointer;
-}
-
 button {
     padding: 12px 24px;
     font-size: 16px;
@@ -90,11 +85,6 @@ p {
     font-weight: bold;
     min-height: 24px;
     cursor: pointer;
-    transition: opacity 0.3s;
-}
-
-#message:hover {
-    opacity: 0.8;
 }
 
 #message-container {
