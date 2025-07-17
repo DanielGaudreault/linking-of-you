@@ -1,61 +1,115 @@
 body {
-    font-family: Arial, sans-serif;
+    font-family: 'Segoe UI', Arial, sans-serif;
     display: flex;
     justify-content: center;
     align-items: center;
     min-height: 100vh;
     margin: 0;
-    background-color: #f0f0f0;
+    background: linear-gradient(135deg, #f5e1ee, #d4e4ff);
+    overflow: auto;
 }
 
 .container {
     text-align: center;
     padding: 20px;
-    background-color: white;
-    border-radius: 10px;
-    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    background-color: rgba(255, 255, 255, 0.95);
+    border-radius: 15px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
     max-width: 90%;
+    width: 400px;
 }
 
 h1 {
-    font-size: 24px;
-    color: #333;
+    font-size: 28px;
+    color: #e91e63;
+    margin-bottom: 20px;
 }
 
-input {
+input, select {
     padding: 10px;
-    margin: 10px;
+    margin: 10px 0;
     font-size: 16px;
-    width: 200px;
-    max-width: 100%;
+    width: 80%;
+    max-width: 300px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
     box-sizing: border-box;
 }
 
 button {
-    padding: 10px 20px;
+    padding: 12px 24px;
     font-size: 16px;
-    background-color: #007bff;
+    background-color: #e91e63;
     color: white;
     border: none;
     border-radius: 5px;
     cursor: pointer;
+    transition: background-color 0.3s, transform 0.2s;
 }
 
 button:hover {
-    background-color: #0056b3;
+    background-color: #c2185b;
+    transform: scale(1.05);
 }
 
 p {
     font-size: 18px;
+    color: #333;
     margin: 10px 0;
-}
-
-#message {
-    color: #e91e63;
-    font-weight: bold;
 }
 
 #my-id {
     font-weight: bold;
     color: #007bff;
+}
+
+#message {
+    font-size: 20px;
+    color: #e91e63;
+    font-weight: bold;
+    min-height: 24px;
+}
+
+#animation-container {
+    position: relative;
+    height: 100px;
+}
+
+.heart {
+    position: absolute;
+    width: 20px;
+    height: 20px;
+    background-color: #e91e63;
+    transform: rotate(-45deg);
+    opacity: 0;
+}
+
+.heart::before,
+.heart::after {
+    content: '';
+    position: absolute;
+    width: 20px;
+    height: 20px;
+    background-color: #e91e63;
+    border-radius: 50%;
+}
+
+.heart::before {
+    top: -10px;
+    left: 0;
+}
+
+.heart::after {
+    left: 10px;
+    top: 0;
+}
+
+@media (max-width: 500px) {
+    h1 {
+        font-size: 24px;
+    }
+    input, select, button {
+        font-size: 14px;
+        padding: 8px;
+    }
 }
