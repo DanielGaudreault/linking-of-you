@@ -18,6 +18,7 @@ if (recentPeerId) {
 // Display peer ID
 peer.on('open', (id) => {
     document.getElementById('my-id').textContent = id;
+    document.getElementById('status').textContent = 'Ready to connect';
 });
 
 // Handle incoming connections
@@ -36,7 +37,14 @@ function connectToPeer() {
     localStorage.setItem('recentPeerId', peerId);
     document.getElementById('status').textContent = 'Connecting...';
     conn = peer.connect(peerId);
-    setTimeout(setupConnection, 1000); // Delay to ensure connection stability
+    setTimeout(() => {
+        if (conn && conn.open) {
+            setupConnection();
+        } else {
+            document.getElementById('status').textContent = 'Connection failed';
+            alert('Failed to connect. Please check the peer ID and try again.');
+        }
+    }, 2000); // Delay to ensure PeerJS initialization
 }
 
 // Setup connection
@@ -70,9 +78,12 @@ function setupConnection() {
     conn.on('error', (err) => {
         console.error('Connection error:', err);
         document.getElementById('status').textContent = 'Connection error';
-        alert('Connection error. Please try again.');
+        alert('Connection error: ' + err.type + '. Please try again.');
         document.getElementById('app-section').style.display = 'none';
         document.getElementById('connect-section').style.display = 'block';
+        currentMessage = null;
+        document.getElementById('message').textContent = '';
+        document.getElementById('acknowledge-btn').style.display = 'none';
     });
 
     conn.on('close', () => {
@@ -162,6 +173,8 @@ peer.on('error', (err) => {
     document.getElementById('status').textContent = 'Connection error';
     if (err.type === 'server-error') {
         alert('Unable to connect to PeerJS server. Please check your network and try again.');
+    } else if (err.type === 'peer-unavailable') {
+        alert('Peer ID not found. Please check the ID and ensure your friend is online.');
     } else {
         alert('Connection error: ' + err.type);
     }
