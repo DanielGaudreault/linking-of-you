@@ -1,11 +1,9 @@
-// Initialize PeerJS
-const peer =宮
-
-System: The conversation was cut off mid-response due to reaching the token limit. Below is the continuation of the response, completing the JavaScript code and concluding the answer.
-
-```javascript
-// Initialize PeerJS
-const peer = new Peer();
+// Initialize PeerJS with explicit signaling server for reliability
+const peer = new Peer({
+    host: 'peerjs.com',
+    secure: true,
+    port: 443
+});
 let conn = null;
 const sound = new Howl({ src: ['https://freesound.org/data/previews/171/171104_3042494-lq.mp3'] }); // Gentle chime
 let messageQueue = [];
@@ -17,11 +15,12 @@ if (recentPeerId) {
     document.getElementById('peer-id').value = recentPeerId;
 }
 
-// Display peer ID
+// Display peer ID and shareable link
 peer.on('open', (id) => {
     document.getElementById('my-id').textContent = id;
-    const shareUrl = `${window.location.href.split('?')[0]}?peer=${id}`;
-    window.history.replaceState(null, '', shareUrl);
+    const baseUrl = window.location.origin + window.location.pathname;
+    const shareUrl = `${baseUrl}?peer=${encodeURIComponent(id)}`;
+    document.getElementById('share-link').value = shareUrl;
 });
 
 // Handle incoming connections
@@ -38,16 +37,19 @@ function connectToPeer() {
         return;
     }
     localStorage.setItem('recentPeerId', peerId);
+    document.getElementById('status').textContent = 'Connecting...';
     conn = peer.connect(peerId);
     setupConnection();
 }
 
 // Copy share link
 function copyShareLink() {
-    const peerId = document.getElementById('my-id').textContent;
-    const shareUrl = `${window.location.href.split('?')[0]}?peer=${peerId}`;
-    navigator.clipboard.writeText(shareUrl).then(() => {
+    const shareLink = document.getElementById('share-link');
+    shareLink.select();
+    navigator.clipboard.writeText(shareLink.value).then(() => {
         alert('Share link copied!');
+    }).catch(() => {
+        alert('Failed to copy link. Please copy it manually.');
     });
 }
 
@@ -60,7 +62,6 @@ function setupConnection() {
     // Receive messages
     conn.on('data', (data) => {
         if (data === 'Message viewed!') {
-            // Sender receives confirmation
             document.getElementById('message').textContent = data;
             animateHearts();
             setTimeout(() => {
@@ -69,13 +70,19 @@ function setupConnection() {
                 }
             }, 3000);
         } else {
-            // Recipient receives a thought
             messageQueue.push(data);
             updateBadge();
             if (!currentMessage) {
                 showNextMessage();
             }
         }
+    });
+
+    // Handle connection errors
+    conn.on('error', (err) => {
+        console.error('Connection error:', err);
+        document.getElementById('status').textContent = 'Connection error';
+        alert('Connection error. Please try again.');
     });
 
     // Handle disconnection
@@ -100,6 +107,10 @@ function sendThought() {
     const messageType = document.getElementById('message-type').value;
     const customMessage = document.getElementById('custom-message').value.trim();
     const message = messageType === 'Custom' && customMessage ? customMessage : messageType;
+    if (message.length > 50) {
+        alert('Message too long! Max 50 characters.');
+        return;
+    }
     conn.send(message);
     document.getElementById('message').textContent = 'Thought sent!';
     animateHearts();
@@ -113,7 +124,7 @@ function sendThought() {
 // Acknowledge message
 function acknowledgeMessage() {
     if (conn && conn.open) {
-        conn.send('Message viewed!'); // Notify sender
+        conn.send('Message viewed!');
     }
     messageQueue.shift();
     currentMessage = null;
@@ -186,6 +197,7 @@ window.onload = () => {
     const peerId = urlParams.get('peer');
     if (peerId) {
         document.getElementById('peer-id').value = peerId;
+        document.getElementById('status').textContent = 'Connecting...';
         connectToPeer();
     }
 };
@@ -193,5 +205,8 @@ window.onload = () => {
 // Handle peer errors
 peer.on('error', (err) => {
     console.error('PeerJS error:', err);
+    document.getElementById('status').textContent = 'Connection error';
     alert('Connection error: ' + err.type);
+    document.getElementById('app-section').style.display = 'none';
+    document.getElementById('connect-section').style.display = 'block';
 });
