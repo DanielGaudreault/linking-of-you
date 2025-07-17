@@ -12,7 +12,7 @@
         <div id="connect-section">
             <p>Your ID: <span id="my-id">Generating...</span></p>
             <input type="text" id="peer-id" placeholder="Enter Friend's ID">
-            <button onclick="connectToPeer()">Connect</button>
+            <button onclick="connectToPeer()" id="connect-btn">Connect <span class="spinner" id="spinner" style="display: none;"></span></button>
         </div>
         <div id="app-section" style="display: none;">
             <p id="status">Connected!</p>
