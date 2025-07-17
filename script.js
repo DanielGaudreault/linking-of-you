@@ -17,6 +17,7 @@ const sound = new Howl({ src: ['https://freesound.org/data/previews/171/171104_3
 let currentMessage = null;
 let connectionRetries = 0;
 const maxRetries = 4;
+let isConnected = false;
 
 // Log with timestamp
 function log(message) {
@@ -34,12 +35,15 @@ peer.on('open', (id) => {
 // Handle incoming connections
 peer.on('connection', (connection) => {
     log('Incoming connection from: ' + connection.peer);
-    conn = connection;
-    setupConnection();
-    // Send confirmation to initiator
-    if (conn && conn.open) {
+    const peerId = document.getElementById('peer-id').value.trim();
+    if (connection.peer === peerId) {
+        conn = connection;
+        setupConnection();
         conn.send('Connection confirmed');
         log('Sent confirmation to: ' + connection.peer);
+    } else {
+        log('Unexpected connection from: ' + connection.peer + ', expected: ' + peerId);
+        connection.close();
     }
 });
 
@@ -47,7 +51,7 @@ peer.on('connection', (connection) => {
 function connectToPeer() {
     const peerId = document.getElementById('peer-id').value.trim();
     if (!peerId) {
-        alert('Please enter a peer ID');
+        alert('Please enter your friend’s peer ID');
         return;
     }
     if (connectionRetries >= maxRetries) {
@@ -65,9 +69,9 @@ function connectToPeer() {
     setTimeout(() => {
         if (conn && conn.open) {
             log('Connection successful to: ' + peerId);
-            conn.send('Connection confirmed'); // Send confirmation to peer
+            conn.send('Connection confirmed');
             log('Sent confirmation to: ' + peerId);
-            setupConnection();
+            checkConnection();
         } else {
             connectionRetries++;
             document.getElementById('status').textContent = 'Failed';
@@ -80,6 +84,32 @@ function connectToPeer() {
     }, 6000); // Extended delay for PeerJS initialization
 }
 
+// Check for two-way connection
+function checkConnection() {
+    if (!conn || !conn.open) {
+        log('Connection check failed: ' + (conn ? 'Connection not open' : 'No connection'));
+        document.getElementById('status').textContent = 'Failed';
+        document.getElementById('connect-btn').disabled = false;
+        document.getElementById('spinner').style.display = 'none';
+        isConnected = false;
+        return;
+    }
+    // Wait for confirmation from peer
+    setTimeout(() => {
+        if (isConnected) {
+            document.getElementById('connect-section').style.display = 'none';
+            document.getElementById('app-section').style.display = 'block';
+            document.getElementById('status').textContent = 'Connected!';
+            log('Two-way connection established');
+        } else {
+            log('No confirmation received from peer');
+            document.getElementById('status').textContent = 'Failed: No confirmation from peer';
+            alert('Failed: Peer did not confirm connection. Both must enter peer IDs.');
+            resetToConnect();
+        }
+    }, 3000); // Wait for confirmation
+}
+
 // Setup connection
 function setupConnection() {
     if (!conn || !conn.open) {
@@ -89,15 +119,12 @@ function setupConnection() {
         document.getElementById('spinner').style.display = 'none';
         return;
     }
-    document.getElementById('connect-section').style.display = 'none';
-    document.getElementById('app-section').style.display = 'block';
-    document.getElementById('status').textContent = 'Connected!';
-    connectionRetries = 0; // Reset retries
 
     conn.on('data', (data) => {
         log('Received data: ' + data + ' from: ' + conn.peer);
         alert('Received: ' + data); // Debug alert
         if (data === 'Connection confirmed') {
+            isConnected = true;
             document.getElementById('status').textContent = 'Connected!';
         } else if (data === 'Message viewed!') {
             document.getElementById('message').textContent = data;
@@ -137,12 +164,13 @@ function resetToConnect() {
     document.getElementById('spinner').style.display = 'none';
     currentMessage = null;
     document.getElementById('message').textContent = '';
+    isConnected = false;
 }
 
 // Send thought
 function sendThought() {
-    if (!conn || !conn.open) {
-        alert('Not connected to a peer!');
+    if (!conn || !conn.open || !isConnected) {
+        alert('Not connected to a peer! Both must enter peer IDs.');
         return;
     }
     const message = document.getElementById('message-type').value;
@@ -159,7 +187,7 @@ function sendThought() {
 
 // Acknowledge message
 function acknowledgeMessage() {
-    if (conn && conn.open) {
+    if (conn && conn.open && isConnected) {
         conn.send('Message viewed!');
         log('Sent acknowledgment to: ' + conn.peer);
     }
