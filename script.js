@@ -22,6 +22,10 @@ peer.on('open', (id) => {
 peer.on('connection', (connection) => {
     conn = connection;
     setupConnection();
+    // Send confirmation to initiator
+    if (conn && conn.open) {
+        conn.send('Connection confirmed');
+    }
 });
 
 // Connect to peer with retry logic
@@ -49,11 +53,11 @@ function connectToPeer() {
             connectionRetries++;
             document.getElementById('status').textContent = 'Failed';
             alert(`Failed to connect (attempt ${connectionRetries}/${maxRetries}). Retrying...`);
-            setTimeout(connectToPeer, 3000 * connectionRetries); // Exponential backoff
+            setTimeout(connectToPeer, 4000 * connectionRetries); // Exponential backoff
             document.getElementById('connect-btn').disabled = false;
             document.getElementById('spinner').style.display = 'none';
         }
-    }, 3000); // Delay for PeerJS initialization
+    }, 4000); // Extended delay for PeerJS initialization
 }
 
 // Setup connection
@@ -70,7 +74,10 @@ function setupConnection() {
     connectionRetries = 0; // Reset retries
 
     conn.on('data', (data) => {
-        if (data === 'Message viewed!') {
+        console.log('Received data:', data); // Debug log
+        if (data === 'Connection confirmed') {
+            document.getElementById('status').textContent = 'Connected!';
+        } else if (data === 'Message viewed!') {
             document.getElementById('message').textContent = data;
             animateHearts();
             setTimeout(() => {
