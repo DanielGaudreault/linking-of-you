@@ -16,23 +16,23 @@ body {
     border-radius: 15px;
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
     max-width: 90%;
-    width: 380px;
+    width: 400px;
 }
 
 h1 {
-    font-size: 26px;
+    font-size: 28px;
     color: #c51162;
     margin-bottom: 16px;
 }
 
 input, select {
-    padding: 10px;
+    padding: 12px;
     margin: 10px 0;
     font-size: 16px;
     width: 85%;
-    max-width: 300px;
+    max-width: 320px;
     border: 1px solid #ccc;
-    border-radius: 6px;
+    border-radius: 8px;
     box-sizing: border-box;
     transition: border-color 0.3s;
 }
@@ -48,7 +48,7 @@ button {
     background-color: #c51162;
     color: white;
     border: none;
-    border-radius: 6px;
+    border-radius: 8px;
     cursor: pointer;
     transition: background-color 0.3s, transform 0.2s;
 }
@@ -85,16 +85,16 @@ p {
 }
 
 #message {
-    font-size: 22px;
+    font-size: 24px;
     color: #c51162;
     background-color: #fff3f6;
-    padding: 12px;
-    border-radius: 6px;
+    padding: 14px;
+    border-radius: 8px;
     font-weight: bold;
-    min-height: 30px;
+    min-height: 32px;
     cursor: pointer;
     transition: opacity 0.3s;
-    border: 1px solid #f8bbd0;
+    border: 2px solid #f8bbd0;
 }
 
 #message:hover {
@@ -103,7 +103,7 @@ p {
 
 #message-container {
     position: relative;
-    min-height: 50px;
+    min-height: 60px;
 }
 
 #my-id {
@@ -113,13 +113,13 @@ p {
 
 #animation-container {
     position: relative;
-    height: 80px;
+    height: 60px;
 }
 
 .heart {
     position: absolute;
-    width: 18px;
-    height: 18px;
+    width: 16px;
+    height: 16px;
     background-color: #c51162;
     transform: rotate(-45deg);
     opacity: 0;
@@ -129,32 +129,35 @@ p {
 .heart::after {
     content: '';
     position: absolute;
-    width: 18px;
-    height: 18px;
+    width: 16px;
+    height: 16px;
     background-color: inherit;
     border-radius: 50%;
 }
 
 .heart::before {
-    top: -9px;
+    top: -8px;
     left: 0;
 }
 
 .heart::after {
-    left: 9px;
+    left: 8px;
     top: 0;
 }
 
 @media (max-width: 500px) {
     h1 {
-        font-size: 22px;
+        font-size: 24px;
     }
     input, select, button {
         font-size: 14px;
-        padding: 8px;
+        padding: 10px;
     }
     .container {
         padding: 16px;
         width: 90%;
+    }
+    #message {
+        font-size: 20px;
     }
 }
