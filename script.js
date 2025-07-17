@@ -49,11 +49,11 @@ function connectToPeer() {
             connectionRetries++;
             document.getElementById('status').textContent = 'Failed';
             alert(`Failed to connect (attempt ${connectionRetries}/${maxRetries}). Retrying...`);
-            setTimeout(connectToPeer, 2000 * connectionRetries); // Exponential backoff
+            setTimeout(connectToPeer, 3000 * connectionRetries); // Exponential backoff
             document.getElementById('connect-btn').disabled = false;
             document.getElementById('spinner').style.display = 'none';
         }
-    }, 2000); // Delay for PeerJS initialization
+    }, 3000); // Delay for PeerJS initialization
 }
 
 // Setup connection
@@ -141,37 +141,24 @@ document.getElementById('message').addEventListener('click', acknowledgeMessage)
 // Animate hearts
 function animateHearts() {
     const container = document.getElementById('animation-container');
-    const colors = ['#d81b60', '#ff4081', '#f06292'];
-    for (let i = 0; i < 5; i++) {
+    const colors = ['#c51162', '#ff4081', '#f06292'];
+    for (let i = 0; i < 4; i++) {
         const heart = document.createElement('div');
         heart.className = 'heart';
         heart.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
-        heart.style.width = `${Math.random() * 10 + 15}px`;
-        heart.style.height = heart.style.width;
-        heart.style.setProperty('--before-width', heart.style.width);
-        heart.style.setProperty('--after-width', heart.style.width);
         container.appendChild(heart);
         anime({
             targets: heart,
-            translateX: () => anime.random(-50, 50),
-            translateY: () => anime.random(-50, -100),
-            scale: [0.5, Math.random() * 0.5 + 1.2],
+            translateX: () => anime.random(-40, 40),
+            translateY: () => anime.random(-40, -80),
+            scale: [0.5, 1.2],
             opacity: [0, 1, 0],
-            duration: 2000,
+            duration: 1500,
             easing: 'easeOutQuad',
             complete: () => heart.remove()
         });
     }
 }
-
-// Update heart pseudo-elements
-const styleSheet = document.styleSheets[0];
-styleSheet.insertRule(`
-    .heart::before, .heart::after {
-        width: var(--before-width);
-        height: var(--before-width);
-        background-color: inherit;
-    }`, styleSheet.cssRules.length);
 
 // Check online status
 window.addEventListener('offline', () => {
