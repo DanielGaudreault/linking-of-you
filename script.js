@@ -7,10 +7,7 @@ const peer = new Peer({
 });
 let conn = null;
 const sound = new Howl({ src: ['https://freesound.org/data/previews/171/171104_3042494-lq.mp3'] });
-let messageQueue = [];
 let currentMessage = null;
-let connectionRetries = 0;
-const maxRetries = 3;
 
 // Load recent peer ID
 const recentPeerId = localStorage.getItem('recentPeerId');
@@ -24,19 +21,19 @@ peer.on('open', (id) => {
     const baseUrl = window.location.origin + window.location.pathname;
     const shareUrl = `${baseUrl}?peer=${encodeURIComponent(id)}`;
     document.getElementById('share-link').value = shareUrl;
-    connectionRetries = 0; // Reset retries on successful peer ID
 });
 
-// Connect to peer with retry logic
+// Handle incoming connections
+peer.on('connection', (connection) => {
+    conn = connection;
+    setupConnection();
+});
+
+// Connect to peer
 function connectToPeer() {
     const peerId = document.getElementById('peer-id').value.trim();
     if (!peerId) {
         alert('Please enter a peer ID');
-        return;
-    }
-    if (connectionRetries >= maxRetries) {
-        alert('Max connection attempts reached. Please try again later.');
-        document.getElementById('status').textContent = 'Connection failed';
         return;
     }
     localStorage.setItem('recentPeerId', peerId);
@@ -72,29 +69,25 @@ function setupConnection() {
                 }
             }, 3000);
         } else {
-            messageQueue.push(data);
-            updateBadge();
-            if (!currentMessage) {
-                showNextMessage();
-            }
+            currentMessage = data;
+            document.getElementById('message').textContent = data;
+            document.getElementById('acknowledge-btn').style.display = 'block';
+            sound.play();
+            animateHearts();
         }
     });
 
     conn.on('error', (err) => {
         console.error('Connection error:', err);
         document.getElementById('status').textContent = 'Connection error';
-        alert('Connection error. Retrying...');
-        connectionRetries++;
-        setTimeout(connectToPeer, 2000 * connectionRetries); // Exponential backoff
+        alert('Connection error. Please try again.');
     });
 
     conn.on('close', () => {
         document.getElementById('status').textContent = 'Disconnected';
         document.getElementById('app-section').style.display = 'none';
         document.getElementById('connect-section').style.display = 'block';
-        messageQueue = [];
         currentMessage = null;
-        updateBadge();
         document.getElementById('message').textContent = '';
         document.getElementById('acknowledge-btn').style.display = 'none';
     });
@@ -128,35 +121,13 @@ function acknowledgeMessage() {
     if (conn && conn.open) {
         conn.send('Message viewed!');
     }
-    messageQueue.shift();
     currentMessage = null;
-    updateBadge();
-    showNextMessage();
+    document.getElementById('message').textContent = '';
+    document.getElementById('acknowledge-btn').style.display = 'none';
 }
 
 // Click message to acknowledge
 document.getElementById('message').addEventListener('click', acknowledgeMessage);
-
-// Show next message
-function showNextMessage() {
-    if (messageQueue.length > 0) {
-        currentMessage = messageQueue[0];
-        document.getElementById('message').textContent = currentMessage;
-        document.getElementById('acknowledge-btn').style.display = 'block';
-        sound.play();
-        animateHearts();
-    } else {
-        document.getElementById('message').textContent = '';
-        document.getElementById('acknowledge-btn').style.display = 'none';
-    }
-}
-
-// Update badge
-function updateBadge() {
-    const badge = document.getElementById('badge');
-    badge.textContent = messageQueue.length;
-    badge.style.display = messageQueue.length > 0 ? 'inline-block' : 'none';
-}
 
 // Animate hearts
 function animateHearts() {
@@ -188,9 +159,9 @@ window.addEventListener('offline', () => {
     document.getElementById('status').textContent = 'Offline - Please reconnect';
     document.getElementById('app-section').style.display = 'none';
     document.getElementById('connect-section').style.display = 'block';
-    messageQueue = [];
     currentMessage = null;
-    updateBadge();
+    document.getElementById('message').textContent = '';
+    document.getElementById('acknowledge-btn').style.display = 'none';
 });
 
 // Auto-connect if peer ID is in URL
@@ -209,13 +180,7 @@ peer.on('error', (err) => {
     console.error('PeerJS error:', err);
     document.getElementById('status').textContent = 'Connection error';
     if (err.type === 'server-error') {
-        alert('Server error. Retrying connection...');
-        connectionRetries++;
-        if (connectionRetries < maxRetries) {
-            setTimeout(connectToPeer, 2000 * connectionRetries);
-        } else {
-            alert('Unable to connect to server. Please check your network or try again later.');
-        }
+        alert('Unable to connect to PeerJS server. Please check your network and try again.');
     } else {
         alert('Connection error: ' + err.type);
     }
