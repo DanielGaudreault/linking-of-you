@@ -85,15 +85,16 @@ p {
 }
 
 #message {
-    font-size: 20px;
+    font-size: 22px;
     color: #c51162;
     background-color: #fff3f6;
-    padding: 10px;
+    padding: 12px;
     border-radius: 6px;
     font-weight: bold;
-    min-height: 24px;
+    min-height: 30px;
     cursor: pointer;
     transition: opacity 0.3s;
+    border: 1px solid #f8bbd0;
 }
 
 #message:hover {
@@ -102,7 +103,7 @@ p {
 
 #message-container {
     position: relative;
-    min-height: 40px;
+    min-height: 50px;
 }
 
 #my-id {
