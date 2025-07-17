@@ -11,7 +11,9 @@
         <h1>Thinking of You 💖 <span id="badge" class="badge" style="display: none;">0</span></h1>
         <div id="connect-section">
             <p>Your ID: <span id="my-id">Generating...</span></p>
-            <button onclick="copyShareLink()">Copy Share Link</button>
+            <p>Share this link:</p>
+            <input type="text" id="share-link" readonly>
+            <button onclick="copyShareLink()">Copy Link</button>
             <input type="text" id="peer-id" placeholder="Enter Friend's ID">
             <button onclick="connectToPeer()">Connect</button>
         </div>
