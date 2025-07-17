@@ -23,6 +23,18 @@ h1 {
     font-size: 28px;
     color: #e91e63;
     margin-bottom: 20px;
+    position: relative;
+}
+
+.badge {
+    background-color: #e91e63;
+    color: white;
+    border-radius: 50%;
+    padding: 2px 8px;
+    font-size: 14px;
+    position: absolute;
+    top: -10px;
+    right: -20px;
 }
 
 input, select {
@@ -52,15 +64,19 @@ button:hover {
     transform: scale(1.05);
 }
 
+#acknowledge-btn {
+    background-color: #007bff;
+    margin-top: 10px;
+}
+
+#acknowledge-btn:hover {
+    background-color: #0056b3;
+}
+
 p {
     font-size: 18px;
     color: #333;
     margin: 10px 0;
-}
-
-#my-id {
-    font-weight: bold;
-    color: #007bff;
 }
 
 #message {
@@ -68,6 +84,16 @@ p {
     color: #e91e63;
     font-weight: bold;
     min-height: 24px;
+    cursor: pointer;
+}
+
+#message-container {
+    position: relative;
+}
+
+#my-id {
+    font-weight: bold;
+    color: #007bff;
 }
 
 #animation-container {
@@ -111,5 +137,9 @@ p {
     input, select, button {
         font-size: 14px;
         padding: 8px;
+    }
+    .badge {
+        font-size: 12px;
+        padding: 1px 6px;
     }
 }
