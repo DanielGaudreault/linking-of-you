@@ -90,6 +90,11 @@ p {
     font-weight: bold;
     min-height: 24px;
     cursor: pointer;
+    transition: opacity 0.3s;
+}
+
+#message:hover {
+    opacity: 0.8;
 }
 
 #message-container {
