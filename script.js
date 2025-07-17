@@ -8,7 +8,8 @@ const peer = new Peer({
         iceServers: [
             { urls: 'stun:stun.l.google.com:19302' },
             { urls: 'stun:stun1.l.google.com:19302' },
-            { urls: 'stun:stun2.l.google.com:19302' }
+            { urls: 'stun:stun2.l.google.com:19302' },
+            { urls: 'turn:turn.example.com:3478', username: 'test', credential: 'test123' } // Replace with a valid TURN server
         ]
     }
 });
@@ -16,7 +17,7 @@ let conn = null;
 const sound = new Howl({ src: ['https://freesound.org/data/previews/171/171104_3042494-lq.mp3'] });
 let currentMessage = null;
 let connectionRetries = 0;
-const maxRetries = 4;
+const maxRetries = 5;
 let isConnected = false;
 
 // Log with timestamp
@@ -77,11 +78,11 @@ function connectToPeer() {
             document.getElementById('status').textContent = 'Failed';
             alert(`Failed to connect (attempt ${connectionRetries}/${maxRetries}). Retrying...`);
             log('Connection failed, retrying: ' + connectionRetries);
-            setTimeout(connectToPeer, 6000 * connectionRetries); // Exponential backoff
+            setTimeout(connectToPeer, 8000 * connectionRetries); // Exponential backoff
             document.getElementById('connect-btn').disabled = false;
             document.getElementById('spinner').style.display = 'none';
         }
-    }, 6000); // Extended delay for PeerJS initialization
+    }, 8000); // Extended delay for PeerJS initialization
 }
 
 // Check for two-way connection
@@ -107,7 +108,7 @@ function checkConnection() {
             alert('Failed: Peer did not confirm connection. Both must enter peer IDs.');
             resetToConnect();
         }
-    }, 3000); // Wait for confirmation
+    }, 4000); // Wait for confirmation
 }
 
 // Setup connection
@@ -239,6 +240,8 @@ peer.on('error', (err) => {
         alert('Peer ID not found. Check the ID and ensure your friend is online.');
     } else if (err.type === 'disconnected') {
         alert('Disconnected from server. Please refresh and try again.');
+    } else if (err.type === 'network') {
+        alert('Network error. Check your connection and try again.');
     } else {
         alert('Error: ' + err.type);
     }
