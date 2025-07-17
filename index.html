@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Thinking of You (P2P)</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Thinking of You</h1>
+        <div id="connect-section">
+            <p>Your Peer ID: <span id="my-id">Generating...</span></p>
+            <input type="text" id="peer-id" placeholder="Enter Friend's Peer ID">
+            <button onclick="connectToPeer()">Connect</button>
+        </div>
+        <div id="app-section" style="display: none;">
+            <p id="status">Connected!</p>
+            <button onclick="sendThought()">I'm Thinking of You</button>
+            <p id="message"></p>
+        </div>
+    </div>
+    <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>
