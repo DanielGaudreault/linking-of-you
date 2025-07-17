@@ -1,9 +1,16 @@
-// Initialize PeerJS
-const peer = new Peer();
+// Initialize PeerJS with reliable configuration
+const peer = new Peer({
+    host: '0.peerjs.com',
+    secure: true,
+    port: 443,
+    config: { iceServers: [{ urls: 'stun:stun.l.google.com:19302' }] }
+});
 let conn = null;
-const sound = new Howl({ src: ['https://freesound.org/data/previews/171/171104_3042494-lq.mp3'] }); // Gentle chime
+const sound = new Howl({ src: ['https://freesound.org/data/previews/171/171104_3042494-lq.mp3'] });
 let messageQueue = [];
 let currentMessage = null;
+let connectionRetries = 0;
+const maxRetries = 3;
 
 // Load recent peer ID
 const recentPeerId = localStorage.getItem('recentPeerId');
@@ -11,37 +18,41 @@ if (recentPeerId) {
     document.getElementById('peer-id').value = recentPeerId;
 }
 
-// Display peer ID
+// Display peer ID and shareable link
 peer.on('open', (id) => {
     document.getElementById('my-id').textContent = id;
-    const shareUrl = `${window.location.href.split('?')[0]}?peer=${id}`;
-    window.history.replaceState(null, '', shareUrl);
+    const baseUrl = window.location.origin + window.location.pathname;
+    const shareUrl = `${baseUrl}?peer=${encodeURIComponent(id)}`;
+    document.getElementById('share-link').value = shareUrl;
+    connectionRetries = 0; // Reset retries on successful peer ID
 });
 
-// Handle incoming connections
-peer.on('connection', (connection) => {
-    conn = connection;
-    setupConnection();
-});
-
-// Connect to peer
+// Connect to peer with retry logic
 function connectToPeer() {
     const peerId = document.getElementById('peer-id').value.trim();
     if (!peerId) {
         alert('Please enter a peer ID');
         return;
     }
+    if (connectionRetries >= maxRetries) {
+        alert('Max connection attempts reached. Please try again later.');
+        document.getElementById('status').textContent = 'Connection failed';
+        return;
+    }
     localStorage.setItem('recentPeerId', peerId);
+    document.getElementById('status').textContent = 'Connecting...';
     conn = peer.connect(peerId);
     setupConnection();
 }
 
 // Copy share link
 function copyShareLink() {
-    const peerId = document.getElementById('my-id').textContent;
-    const shareUrl = `${window.location.href.split('?')[0]}?peer=${peerId}`;
-    navigator.clipboard.writeText(shareUrl).then(() => {
+    const shareLink = document.getElementById('share-link');
+    shareLink.select();
+    navigator.clipboard.writeText(shareLink.value).then(() => {
         alert('Share link copied!');
+    }).catch(() => {
+        alert('Failed to copy. Please copy manually.');
     });
 }
 
@@ -51,16 +62,32 @@ function setupConnection() {
     document.getElementById('app-section').style.display = 'block';
     document.getElementById('status').textContent = 'Connected!';
 
-    // Receive messages
     conn.on('data', (data) => {
-        messageQueue.push(data);
-        updateBadge();
-        if (!currentMessage) {
-            showNextMessage();
+        if (data === 'Message viewed!') {
+            document.getElementById('message').textContent = data;
+            animateHearts();
+            setTimeout(() => {
+                if (!currentMessage) {
+                    document.getElementById('message').textContent = '';
+                }
+            }, 3000);
+        } else {
+            messageQueue.push(data);
+            updateBadge();
+            if (!currentMessage) {
+                showNextMessage();
+            }
         }
     });
 
-    // Handle disconnection
+    conn.on('error', (err) => {
+        console.error('Connection error:', err);
+        document.getElementById('status').textContent = 'Connection error';
+        alert('Connection error. Retrying...');
+        connectionRetries++;
+        setTimeout(connectToPeer, 2000 * connectionRetries); // Exponential backoff
+    });
+
     conn.on('close', () => {
         document.getElementById('status').textContent = 'Disconnected';
         document.getElementById('app-section').style.display = 'none';
@@ -82,6 +109,10 @@ function sendThought() {
     const messageType = document.getElementById('message-type').value;
     const customMessage = document.getElementById('custom-message').value.trim();
     const message = messageType === 'Custom' && customMessage ? customMessage : messageType;
+    if (message.length > 50) {
+        alert('Message too long! Max 50 characters.');
+        return;
+    }
     conn.send(message);
     document.getElementById('message').textContent = 'Thought sent!';
     animateHearts();
@@ -94,6 +125,9 @@ function sendThought() {
 
 // Acknowledge message
 function acknowledgeMessage() {
+    if (conn && conn.open) {
+        conn.send('Message viewed!');
+    }
     messageQueue.shift();
     currentMessage = null;
     updateBadge();
@@ -151,7 +185,7 @@ document.getElementById('message-type').addEventListener('change', (e) => {
 
 // Check online status
 window.addEventListener('offline', () => {
-    document.getElementById('status').textContent = 'Offline - Please reconnect when back online';
+    document.getElementById('status').textContent = 'Offline - Please reconnect';
     document.getElementById('app-section').style.display = 'none';
     document.getElementById('connect-section').style.display = 'block';
     messageQueue = [];
@@ -165,12 +199,26 @@ window.onload = () => {
     const peerId = urlParams.get('peer');
     if (peerId) {
         document.getElementById('peer-id').value = peerId;
-        connectToPeer();
+        document.getElementById('status').textContent = 'Connecting...';
+        setTimeout(connectToPeer, 1000); // Delay for PeerJS initialization
     }
 };
 
 // Handle peer errors
 peer.on('error', (err) => {
     console.error('PeerJS error:', err);
-    alert('Connection error: ' + err.type);
+    document.getElementById('status').textContent = 'Connection error';
+    if (err.type === 'server-error') {
+        alert('Server error. Retrying connection...');
+        connectionRetries++;
+        if (connectionRetries < maxRetries) {
+            setTimeout(connectToPeer, 2000 * connectionRetries);
+        } else {
+            alert('Unable to connect to server. Please check your network or try again later.');
+        }
+    } else {
+        alert('Connection error: ' + err.type);
+    }
+    document.getElementById('app-section').style.display = 'none';
+    document.getElementById('connect-section').style.display = 'block';
 });
