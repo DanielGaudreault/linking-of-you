@@ -3,13 +3,56 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Peer Messaging</title>
-    <link rel="stylesheet" href="styles.css">
+    <title>Peer-to-Peer Messaging</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background-color: #f0f0f0;
+        }
+        .container {
+            text-align: center;
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        button, select, input[type="text"] {
+            margin: 10px;
+            padding: 10px;
+            font-size: 16px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #007bff;
+            color: white;
+        }
+        #messages {
+            margin-top: 20px;
+            text-align: left;
+            max-height: 200px;
+            overflow-y: auto;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+        #status {
+            color: #555;
+            margin: 10px 0;
+        }
+    </style>
 </head>
 <body>
     <div class="container">
         <h1>Send a Message to Your Peer</h1>
-        <p>Peer ID: <span id="my-id">Connecting...</span></p>
+        <p>Your Peer ID: <span id="my-id">Connecting...</span></p>
+        <p id="status">Not connected</p>
         <input type="text" id="peer-id" placeholder="Enter peer's ID">
         <button onclick="connectToPeer()">Connect to Peer</button>
         <div class="message-options">
@@ -25,7 +68,97 @@
         </div>
         <div id="messages"></div>
     </div>
-    <script src="/socket.io/socket.io.js"></script>
-    <script src="script.js"></script>
+    <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
+    <script>
+        // Initialize PeerJS
+        const peer = new Peer();
+        let conn = null;
+
+        // Get DOM elements
+        const myIdElement = document.getElementById('my-id');
+        const peerIdInput = document.getElementById('peer-id');
+        const messagesDiv = document.getElementById('messages');
+        const customMessageInput = document.getElementById('custom-message');
+        const statusElement = document.getElementById('status');
+
+        // When peer ID is assigned
+        peer.on('open', (id) => {
+            myIdElement.textContent = id;
+            statusElement.textContent = 'Ready to connect';
+        });
+
+        // Handle incoming connections
+        peer.on('connection', (connection) => {
+            conn = connection;
+            setupConnection();
+            statusElement.textContent = `Connected to ${conn.peer}`;
+        });
+
+        // Connect to another peer
+        function connectToPeer() {
+            const peerId = peerIdInput.value.trim();
+            if (!peerId) {
+                alert('Please enter a peer ID');
+                return;
+            }
+            conn = peer.connect(peerId);
+            setupConnection();
+            statusElement.textContent = `Connected to ${peerId}`;
+        }
+
+        // Setup connection for sending/receiving messages
+        function setupConnection() {
+            conn.on('open', () => {
+                console.log('Connection established');
+            });
+            conn.on('data', (data) => {
+                displayMessage(`Peer: ${data}`);
+            });
+            conn.on('close', () => {
+                statusElement.textContent = 'Connection closed';
+                conn = null;
+            });
+        }
+
+        // Send a message
+        function sendMessage(message) {
+            if (conn && conn.open) {
+                conn.send(message);
+                displayMessage(`You: ${message}`);
+            } else {
+                alert('Not connected to a peer');
+            }
+        }
+
+        // Send selected message from dropdown
+        function sendSelectedMessage() {
+            const select = document.getElementById('message-select');
+            const message = select.value;
+            if (message) sendMessage(message);
+        }
+
+        // Send custom message
+        function sendCustomMessage() {
+            const message = customMessageInput.value.trim();
+            if (message) {
+                sendMessage(message);
+                customMessageInput.value = '';
+            }
+        }
+
+        // Display messages
+        function displayMessage(message) {
+            const p = document.createElement('p');
+            p.textContent = message;
+            messagesDiv.appendChild(p);
+            messagesDiv.scrollTop = messagesDiv.scrollHeight;
+        }
+
+        // Handle errors
+        peer.on('error', (err) => {
+            console.error('PeerJS error:', err);
+            statusElement.textContent = 'Error: Could not connect';
+        });
+    </script>
 </body>
 </html>
