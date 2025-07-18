@@ -3,34 +3,29 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Thinking of You</title>
-    <link rel="stylesheet" href="style.css">
+    <title>Peer Messaging</title>
+    <link rel="stylesheet" href="styles.css">
 </head>
 <body>
     <div class="container">
-        <h1>Thinking of You 💖</h1>
-        <div id="connect-section">
-            <p>Your ID: <span id="my-id">Generating...</span></p>
-            <input type="text" id="peer-id" placeholder="Enter Friend's ID">
-            <button onclick="connectToPeer()" id="connect-btn">Connect <span class="spinner" id="spinner" style="display: none;"></span></button>
-        </div>
-        <div id="app-section" style="display: none;">
-            <p id="status">Connected!</p>
-            <select id="message-type">
-                <option value="Someone is thinking of you!">Thinking of You</option>
-                <option value="Miss you!">Miss You</option>
-                <option value="You're awesome!">You're Awesome</option>
+        <h1>Send a Message to Your Peer</h1>
+        <p>Peer ID: <span id="my-id">Connecting...</span></p>
+        <input type="text" id="peer-id" placeholder="Enter peer's ID">
+        <button onclick="connectToPeer()">Connect to Peer</button>
+        <div class="message-options">
+            <button onclick="sendMessage('Thinking of you!')">Send "Thinking of You"</button>
+            <select id="message-select" onchange="sendSelectedMessage()">
+                <option value="">Select an option</option>
+                <option value="Sending a smile! 😊">Send a Smile</option>
+                <option value="Sending a wave! 👋">Send a Wave</option>
+                <option value="Let's chat soon!">Let's Chat Soon</option>
             </select>
-            <button onclick="sendThought()">Send a Thought 💌</button>
-            <div id="message-container">
-                <p id="message"></p>
-            </div>
-            <div id="animation-container"></div>
+            <input type="text" id="custom-message" placeholder="Custom message">
+            <button onclick="sendCustomMessage()">Send Custom Message</button>
         </div>
+        <div id="messages"></div>
     </div>
-    <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.2/anime.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/howler/2.2.4/howler.min.js"></script>
+    <script src="/socket.io/socket.io.js"></script>
     <script src="script.js"></script>
 </body>
 </html>
