@@ -3,12 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="icon" type="image/png" href="images/main logo 2.png"> <!-- Updated Favicon -->
-    <!-- For iOS -->
-    <link rel="apple-touch-icon" sizes="180x180" href="images/icons/apple-touch-icon.png">
-    <!-- For Android -->
-    <style>
+    <meta name="description" content="ConnectSphere: A peer-to-peer messaging app to connect with friends.">
+    <meta name="theme-color" content="#007bff">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
     <title>ConnectSphere: Peer Messaging</title>
+    <link rel="icon" type="image/png" href="images/main logo 2.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="images/icons/apple-touch-icon.png">
+    <link rel="manifest" href="/manifest.json">
     <style>
         :root {
             --primary-color: #007bff;
@@ -93,7 +95,7 @@
             transition: background-color 0.3s;
         }
 
-        button:hover {
+        button:hover:not(:disabled) {
             background-color: #0056b3;
         }
 
@@ -155,17 +157,17 @@
         <p>Your Peer ID: <span id="my-id">Connecting...</span></p>
         <p id="status">Not connected</p>
         <input type="text" id="peer-id" placeholder="Enter peer's ID">
-        <button onclick="connectToPeer()">Connect to Peer</button>
+        <button id="connect-btn" onclick="connectToPeer()">Connect to Peer</button>
         <div class="message-options">
-            <button onclick="sendMessage('Thinking of you!')">Send "Thinking of You"</button>
-            <select id="message-select" onchange="sendSelectedMessage()">
+            <button id="thinking-btn" onclick="sendMessage('Thinking of you!')" disabled>Send "Thinking of You"</button>
+            <select id="message-select" onchange="sendSelectedMessage()" disabled>
                 <option value="">Select an option</option>
                 <option value="Sending a smile! 😊">Send a Smile</option>
                 <option value="Sending a wave! 👋">Send a Wave</option>
                 <option value="Let's chat soon!">Let's Chat Soon</option>
             </select>
             <input type="text" id="custom-message" placeholder="Custom message" onkeydown="if(event.key === 'Enter') sendCustomMessage()">
-            <button onclick="sendCustomMessage()">Send Custom Message</button>
+            <button id="custom-btn" onclick="sendCustomMessage()" disabled>Send Custom Message</button>
         </div>
         <div id="messages"></div>
     </div>
@@ -181,11 +183,24 @@
         const messagesDiv = document.getElementById('messages');
         const customMessageInput = document.getElementById('custom-message');
         const statusElement = document.getElementById('status');
+        const connectBtn = document.getElementById('connect-btn');
+        const thinkingBtn = document.getElementById('thinking-btn');
+        const messageSelect = document.getElementById('message-select');
+        const customBtn = document.getElementById('custom-btn');
+
+        // Update button states based on connection
+        function updateButtonStates() {
+            const isConnected = conn && conn.open;
+            thinkingBtn.disabled = !isConnected;
+            messageSelect.disabled = !isConnected;
+            customBtn.disabled = !isConnected;
+        }
 
         // When peer ID is assigned
         peer.on('open', (id) => {
             myIdElement.textContent = id;
             statusElement.textContent = 'Ready to connect';
+            updateButtonStates();
         });
 
         // Handle incoming connections
@@ -193,6 +208,7 @@
             conn = connection;
             setupConnection();
             statusElement.textContent = `Connected to ${conn.peer}`;
+            updateButtonStates();
         });
 
         // Connect to another peer
@@ -202,15 +218,16 @@
                 alert('Please enter a peer ID');
                 return;
             }
+            statusElement.textContent = 'Connecting...';
             conn = peer.connect(peerId);
             setupConnection();
-            statusElement.textContent = `Connected to ${peerId}`;
         }
 
         // Setup connection for sending/receiving messages
         function setupConnection() {
             conn.on('open', () => {
-                console.log('Connection established');
+                statusElement.textContent = `Connected to ${conn.peer}`;
+                updateButtonStates();
             });
             conn.on('data', (data) => {
                 displayMessage(`Peer: ${data}`);
@@ -218,6 +235,12 @@
             conn.on('close', () => {
                 statusElement.textContent = 'Connection closed';
                 conn = null;
+                updateButtonStates();
+            });
+            conn.on('error', (err) => {
+                statusElement.textContent = 'Connection error';
+                console.error('Connection error:', err);
+                updateButtonStates();
             });
         }
 
@@ -235,7 +258,10 @@
         function sendSelectedMessage() {
             const select = document.getElementById('message-select');
             const message = select.value;
-            if (message) sendMessage(message);
+            if (message) {
+                sendMessage(message);
+                select.value = ''; // Reset dropdown
+            }
         }
 
         // Send custom message
@@ -255,11 +281,25 @@
             messagesDiv.scrollTop = messagesDiv.scrollHeight;
         }
 
-        // Handle errors
+        // Handle PeerJS errors
         peer.on('error', (err) => {
             console.error('PeerJS error:', err);
-            statusElement.textContent = 'Error: Could not connect';
+            statusElement.textContent = `Error: ${err.type === 'peer-unavailable' ? 'Peer ID not found' : 'Could not connect'}`;
+            updateButtonStates();
         });
+
+        // Register service worker for PWA
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/sw.js')
+                    .then((registration) => {
+                        console.log('Service Worker registered:', registration);
+                    })
+                    .catch((error) => {
+                        console.error('Service Worker registration failed:', error);
+                    });
+            });
+        }
     </script>
 </body>
 </html>
